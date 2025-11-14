@@ -3,7 +3,7 @@ package br.edu.utfpr.oo2.FinanSystem.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import br.edu.utfpr.oo2.FinanSystem.entity.Transacao;
+import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
 
 public class TransacaoDAO implements DAO<Transacao, Integer> {
 

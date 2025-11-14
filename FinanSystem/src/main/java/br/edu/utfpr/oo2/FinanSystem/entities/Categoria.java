@@ -1,4 +1,4 @@
-package br.edu.utfpr.oo2.FinanSystem.entity;
+package br.edu.utfpr.oo2.FinanSystem.entities;
 
 public class Categoria {
 

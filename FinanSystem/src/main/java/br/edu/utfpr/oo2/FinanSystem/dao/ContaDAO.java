@@ -3,7 +3,7 @@ package br.edu.utfpr.oo2.FinanSystem.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import br.edu.utfpr.oo2.FinanSystem.entity.Conta;
+import br.edu.utfpr.oo2.FinanSystem.entities.Conta;
 
 public class ContaDAO implements DAO<Conta, Integer> {
 
@@ -120,4 +120,31 @@ public class ContaDAO implements DAO<Conta, Integer> {
             BancoDados.desconectar();
         }
     }
+
+    public Conta buscarPorNumero(int numeroConta) throws SQLException {
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.prepareStatement("SELECT * FROM conta WHERE numeroConta = ?");
+            st.setInt(1, numeroConta);
+            rs = st.executeQuery();
+            if (rs.next()) {
+                Conta c = new Conta();
+                c.setId(rs.getInt("id"));
+                c.setUserId(rs.getInt("userId"));
+                c.setNomeBanco(rs.getString("nomeBanco"));
+                c.setAgencia(rs.getString("agencia"));
+                c.setNumeroConta(rs.getInt("numeroConta"));
+                c.setSaldoInicial(rs.getDouble("saldoInicial"));
+                c.setTipoConta(rs.getString("tipoConta"));
+                return c;
+            }
+            return null;
+        } finally {
+            BancoDados.finalizarStatement(st);
+            BancoDados.finalizarResultSet(rs);
+            BancoDados.desconectar();
+        }
+    }
+
 }

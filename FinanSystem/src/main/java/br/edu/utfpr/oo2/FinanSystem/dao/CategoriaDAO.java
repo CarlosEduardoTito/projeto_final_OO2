@@ -3,7 +3,7 @@ package br.edu.utfpr.oo2.FinanSystem.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import br.edu.utfpr.oo2.FinanSystem.entity.Categoria;
+import br.edu.utfpr.oo2.FinanSystem.entities.Categoria;
 
 public class CategoriaDAO implements DAO<Categoria, Integer> {
 
@@ -104,4 +104,27 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
             BancoDados.desconectar();
         }
     }
+
+    public Categoria buscarPorNome(String nome) throws SQLException {
+        String sql = "SELECT * FROM categoria WHERE nome = ?";
+        PreparedStatement st = null;
+        ResultSet rs = null;
+        try {
+            st = conn.prepareStatement(sql);
+            st.setString(1, nome);
+            rs = st.executeQuery();
+            if (rs.next()) {
+                Categoria c = new Categoria();
+                c.setId(rs.getInt("id"));
+                c.setNome(rs.getString("nome"));
+                c.setTipo(rs.getString("tipo"));
+                return c;
+            }
+            return null;
+        } finally {
+            BancoDados.finalizarResultSet(rs);
+            BancoDados.finalizarStatement(st);
+        }
+    }
+
 }
