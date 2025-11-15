@@ -1,12 +1,12 @@
 package br.edu.utfpr.oo2.FinanSystem.gui;
 
 import java.awt.Frame;
-import java.awt.GridLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -31,7 +31,6 @@ public class JanelaCadastroUsuario extends JDialog {
     private JComboBox<String> cbSexo;
     private JTextField txtNomeUsuario;
     private JPasswordField txtSenha;
-    private MaskFormatter mascaraData;
     private JButton btnConfirmar;
     private JButton btnCancelar;
 
@@ -160,14 +159,37 @@ public class JanelaCadastroUsuario extends JDialog {
 
     private void confirmarUsuario() {
         try {
+            // Validação de campos vazios
             String nomeCompleto = txtNomeCompleto.getText().trim();
-            LocalDate dataNasc = LocalDate.parse(
-                    txtDataNascimento.getText().trim(),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy")
-            );
+            if (nomeCompleto.isEmpty()) {
+                throw new Exception("O campo 'Nome completo' é obrigatório!");
+            }
+
+            String dataNascStr = txtDataNascimento.getText().trim();
+            if (dataNascStr.isEmpty() || dataNascStr.contains("_")) {
+                throw new Exception("O campo 'Data de nascimento' é obrigatório!");
+            }
+
+            LocalDate dataNasc;
+            try {
+                dataNasc = LocalDate.parse(
+                        dataNascStr,
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                );
+            } catch (DateTimeParseException e) {
+                throw new Exception("O campo 'Data de nascimento' é obrigatório!");
+            }
+
             String sexo = (String) cbSexo.getSelectedItem();
             String nomeUsuario = txtNomeUsuario.getText().trim();
+            if (nomeUsuario.isEmpty()) {
+                throw new Exception("O campo 'Nome de usuário' é obrigatório!");
+            }
+
             String senha = new String(txtSenha.getPassword());
+            if (senha.isEmpty()) {
+                throw new Exception("O campo 'Senha' é obrigatório!");
+            }
 
             Usuario usuario = new Usuario(
                     nomeCompleto,

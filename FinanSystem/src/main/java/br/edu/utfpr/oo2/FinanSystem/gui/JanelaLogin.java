@@ -95,8 +95,10 @@ public class JanelaLogin extends JFrame {
 			try {
 				abrirCadastro();
 			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				JOptionPane.showMessageDialog(this,
+						"Erro ao abrir janela de cadastro: " + e1.getMessage(),
+						"Erro",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		});
     }
@@ -104,6 +106,23 @@ public class JanelaLogin extends JFrame {
     private void fazerLogin() {
         String nomeUsuario = txtNomeUsuario.getText().trim();
         String senha = new String(txtSenha.getPassword());
+
+        // Validação de campos vazios
+        if (nomeUsuario.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "O campo 'Nome de usuário' é obrigatório!",
+                    "Erro de login",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (senha.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "O campo 'Senha' é obrigatório!",
+                    "Erro de login",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         try {
             Usuario usuario = usuarioService.login(nomeUsuario, senha);

@@ -8,8 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
 
@@ -147,7 +145,8 @@ public class UsuarioDAO {
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         Integer id = rs.getInt("id");
         String nomeCompleto = rs.getString("nome_completo");
-        LocalDate dataNascimento = rs.getDate("data_nascimento").toLocalDate();
+        Date dataNasc = rs.getDate("data_nascimento");
+        LocalDate dataNascimento = dataNasc != null ? dataNasc.toLocalDate() : null;
         String sexo = rs.getString("sexo");
         String nomeUsuario = rs.getString("username");
         String senha = rs.getString("senha");
