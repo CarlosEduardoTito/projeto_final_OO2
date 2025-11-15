@@ -15,8 +15,15 @@ public class UsuarioService {
         try {
             Usuario existente = usuarioDAO.buscarPorNomeUsuario(usuario.getNomeUsuario());
             if (existente != null) {
-                throw new Exception("Nome de usuário já está em uso.");
+            	
+                throw new Exception("Nome de usuário já está em uso!");
             }
+            
+            if (usuario.getNomeCompleto() == "" || usuario.getNomeUsuario() == "" || usuario.getSenha() == "") {
+            	
+            	throw new Exception("Dados incompletos!");
+            }
+            
             usuarioDAO.inserir(usuario);
 
         } catch (SQLException | IOException e) {
