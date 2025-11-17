@@ -27,6 +27,17 @@
 			<version>8.4.0</version>
         </dependency>
         
+        <dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi-ooxml</artifactId>
+    <version>5.2.5</version> </dependency>
+
+	<dependency>
+ 	   <groupId>com.itextpdf</groupId>
+ 	   <artifactId>itext7-core</artifactId>
+ 	   <version>8.0.4</version> <type>pom</type>
+	</dependency>
+        
     </dependencies>
 
     <build>
@@ -81,6 +92,10 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>2.10.4</version>
             </plugin>
+        </plugins>
+    </reporting>
+</project>
+
         </plugins>
     </reporting>
 </project>
