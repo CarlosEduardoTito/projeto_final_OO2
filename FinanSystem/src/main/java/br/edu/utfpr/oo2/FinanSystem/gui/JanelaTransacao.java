@@ -4,37 +4,50 @@ import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
 import br.edu.utfpr.oo2.FinanSystem.service.TransacaoService;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
+import java.util.List;
 
 public class JanelaTransacao extends JDialog {
 
     private final TransacaoService service = new TransacaoService();
+    private JTable tabela;
+    private DefaultTableModel modelo;
 
     public JanelaTransacao(Frame owner, boolean modal) {
         super(owner, modal);
         init();
+        carregarTabela();
     }
 
     private void init() {
         setTitle("FinanSystem - Transações");
-        setSize(480, 300);
+        setSize(750, 450);
         setLayout(new BorderLayout());
         setLocationRelativeTo(null);
 
-        JPanel painel = new JPanel(new GridLayout(4, 1, 10, 10));
+        String[] colunas = { "ID", "Conta", "Categoria", "Descrição", "Valor", "Data" };
+        modelo = new DefaultTableModel(colunas, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
 
-        JButton btnAdd = new JButton("Adicionar Transação");
-        JButton btnEdit = new JButton("Editar Transação");
-        JButton btnDelete = new JButton("Excluir Transação");
+        tabela = new JTable(modelo);
+        JScrollPane scroll = new JScrollPane(tabela);
+
+        JPanel painelBotoes = new JPanel(new GridLayout(1, 4, 10, 10));
+        JButton btnAdd = new JButton("Adicionar");
+        JButton btnEdit = new JButton("Editar");
+        JButton btnDelete = new JButton("Excluir");
         JButton btnFechar = new JButton("Fechar");
 
-        painel.add(btnAdd);
-        painel.add(btnEdit);
-        painel.add(btnDelete);
+        painelBotoes.add(btnAdd);
+        painelBotoes.add(btnEdit);
+        painelBotoes.add(btnDelete);
+        painelBotoes.add(btnFechar);
 
-        add(painel, BorderLayout.CENTER);
-        add(btnFechar, BorderLayout.SOUTH);
+        add(scroll, BorderLayout.CENTER);
+        add(painelBotoes, BorderLayout.SOUTH);
 
         btnAdd.addActionListener(e -> adicionar());
         btnEdit.addActionListener(e -> editar());
@@ -42,70 +55,139 @@ public class JanelaTransacao extends JDialog {
         btnFechar.addActionListener(e -> dispose());
     }
 
+
+    //     CARREGAR TABELA
+
+    private void carregarTabela() {
+        //  Chamando a tela de carregamento
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> {
+                    List<Transacao> lista = service.listarTransacoes();
+                    SwingUtilities.invokeLater(() -> {
+                        modelo.setRowCount(0);
+                        for (Transacao t : lista) {
+                            modelo.addRow(new Object[]{
+                                    t.getId(),
+                                    t.getContaId(),
+                                    t.getCategoriaId(),
+                                    t.getDescricao(),
+                                    t.getValor(),
+                                    t.getData()
+                            });
+                        }
+                    });
+                },
+                null
+        );
+    }
+
+
+    //     ADICIONAR
+
     private void adicionar() {
+
         try {
             int contaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Conta:"));
             int categoriaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Categoria:"));
-
             String descricao = JOptionPane.showInputDialog(this, "Descrição:");
             if (descricao == null) descricao = "";
+            double valor = Double.parseDouble(JOptionPane.showInputDialog(this, "Valor:"));
+            LocalDate data = LocalDate.parse(JOptionPane.showInputDialog(this, "Data (AAAA-MM-DD):"));
 
-            double valor = Double.parseDouble(
-                    JOptionPane.showInputDialog(this, "Valor:")
+            Transacao nova = new Transacao(contaId, categoriaId, descricao, valor, data);
+
+            // 👉 Com tela de carregamento
+            TarefaComCarregamento.executar(
+                    (Frame) getOwner(),
+                    () -> service.cadastrarTransacao(nova),
+                    () -> {
+                        JOptionPane.showMessageDialog(this, "Transação cadastrada com sucesso.");
+                        carregarTabela();
+                    }
             );
 
-            LocalDate data = LocalDate.parse(
-                    JOptionPane.showInputDialog(this, "Data (AAAA-MM-DD):")
-            );
-
-            Transacao t = new Transacao(contaId, categoriaId, descricao, valor, data);
-            service.cadastrarTransacao(t);
-
-            JOptionPane.showMessageDialog(this, "Transação cadastrada com sucesso.");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
+
+
+    //     EDITAR
 
     private void editar() {
+
         try {
             int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Transação:"));
-            Transacao existente = service.buscarPorId(id);
 
-            if (existente == null) {
-                JOptionPane.showMessageDialog(this, "Transação não encontrada.");
-                return;
-            }
+            //  Carrega transação com tela de carregamento e retorno
+            TarefaComCarregamento.executarComRetorno(
+                    (Frame) getOwner(),
+                    () -> service.buscarPorId(id),
+                    existente -> {
 
-            int contaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Conta:", existente.getContaId()));
-            int categoriaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Categoria:", existente.getCategoriaId()));
+                        if (existente == null) {
+                            JOptionPane.showMessageDialog(this, "Transação não encontrada.");
+                            return;
+                        }
 
-            String descricao = JOptionPane.showInputDialog(this, "Descrição:", existente.getDescricao());
-            if (descricao == null) descricao = "";
+                        try {
+                            int contaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Conta:", existente.getContaId()));
+                            int categoriaId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Categoria:", existente.getCategoriaId()));
+                            String descricao = JOptionPane.showInputDialog(this, "Descrição:", existente.getDescricao());
+                            if (descricao == null) descricao = "";
+                            double valor = Double.parseDouble(JOptionPane.showInputDialog(this, "Valor:", existente.getValor()));
+                            LocalDate data = LocalDate.parse(JOptionPane.showInputDialog(this, "Data (AAAA-MM-DD):", existente.getData().toString()));
 
-            double valor = Double.parseDouble(
-                    JOptionPane.showInputDialog(this, "Valor:", existente.getValor())
+                            Transacao nova = new Transacao(id, contaId, categoriaId, descricao, valor, data);
+
+                            //  Atualização usando tela de carregamento
+                            TarefaComCarregamento.executar(
+                                    (Frame) getOwner(),
+                                    () -> service.atualizarTransacao(nova),
+                                    () -> {
+                                        JOptionPane.showMessageDialog(this, "Transação atualizada com sucesso.");
+                                        carregarTabela();
+                                    }
+                            );
+
+                        } catch (Exception e) {
+                            JOptionPane.showMessageDialog(this, e.getMessage());
+                        }
+
+                    }
             );
 
-            LocalDate data = LocalDate.parse(
-                    JOptionPane.showInputDialog(this, "Data (AAAA-MM-DD):", existente.getData().toString())
-            );
-
-            Transacao nova = new Transacao(id, contaId, categoriaId, descricao, valor, data);
-
-            service.atualizarTransacao(nova);
-
-            JOptionPane.showMessageDialog(this, "Transação atualizada com sucesso.");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }
     }
 
+
+    //     EXCLUIR
+
     private void excluir() {
+
         try {
             int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID da Transação:"));
-            service.excluirTransacao(id);
-            JOptionPane.showMessageDialog(this, "Transação excluída com sucesso.");
+
+            int r = JOptionPane.showConfirmDialog(this,
+                    "Excluir esta transação?",
+                    "Confirmar",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (r != JOptionPane.YES_OPTION) return;
+
+            //  Exclusão com tela de carregamento
+            TarefaComCarregamento.executar(
+                    (Frame) getOwner(),
+                    () -> service.excluirTransacao(id),
+                    () -> {
+                        JOptionPane.showMessageDialog(this, "Transação excluída com sucesso.");
+                        carregarTabela();
+                    }
+            );
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         }

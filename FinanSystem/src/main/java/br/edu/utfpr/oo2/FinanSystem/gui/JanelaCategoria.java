@@ -4,118 +4,168 @@ import br.edu.utfpr.oo2.FinanSystem.entities.Categoria;
 import br.edu.utfpr.oo2.FinanSystem.service.CategoriaService;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 public class JanelaCategoria extends JDialog {
 
     private final CategoriaService categoriaService = new CategoriaService();
+    private JTable tabela;
+    private DefaultTableModel modelo;
 
     public JanelaCategoria(Frame owner, boolean modal) {
         super(owner, modal);
         init();
+        carregarTabela();
     }
 
     private void init() {
         setTitle("FinanSystem - Categorias");
-        setSize(400, 250);
-        setLayout(new BorderLayout());
+        setSize(600, 350);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        JPanel painel = new JPanel(new GridLayout(4, 1, 10, 10));
+        modelo = new DefaultTableModel(
+                new Object[]{"ID", "Nome", "Tipo"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
 
-        JButton btnAdd = new JButton("Adicionar Categoria");
-        JButton btnEdit = new JButton("Editar Categoria");
-        JButton btnDelete = new JButton("Excluir Categoria");
-        JButton btnFechar = new JButton("Fechar");
+        tabela = new JTable(modelo);
+        JScrollPane scroll = new JScrollPane(tabela);
 
-        painel.add(btnAdd);
-        painel.add(btnEdit);
-        painel.add(btnDelete);
+        JPanel botoes = new JPanel(new GridLayout(1, 4, 10, 0));
+        JButton add = new JButton("Adicionar");
+        JButton edit = new JButton("Editar");
+        JButton del = new JButton("Excluir");
+        JButton fechar = new JButton("Fechar");
 
-        add(painel, BorderLayout.CENTER);
-        add(btnFechar, BorderLayout.SOUTH);
+        botoes.add(add);
+        botoes.add(edit);
+        botoes.add(del);
+        botoes.add(fechar);
 
-        btnAdd.addActionListener(e -> adicionar());
-        btnEdit.addActionListener(e -> editar());
-        btnDelete.addActionListener(e -> excluir());
-        btnFechar.addActionListener(e -> dispose());
+        add(scroll, BorderLayout.CENTER);
+        add(botoes, BorderLayout.SOUTH);
+
+        add.addActionListener(e -> adicionar());
+        edit.addActionListener(e -> editar());
+        del.addActionListener(e -> excluir());
+        fechar.addActionListener(e -> dispose());
     }
 
-    private String escolherTipo(String atual) {
-        String[] tipos = {"Entrada", "Saída", "Investimento"};
-        return (String) JOptionPane.showInputDialog(
-                this,
-                "Selecione o tipo da categoria:",
-                "Tipo",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                tipos,
-                atual != null ? atual : tipos[0]
+    private void carregarTabela() {
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> {
+                    List<Categoria> categorias = categoriaService.listarCategorias();
+                    SwingUtilities.invokeLater(() -> {
+                        modelo.setRowCount(0);
+                        for (Categoria c : categorias) {
+                            modelo.addRow(new Object[]{
+                                    c.getId(),
+                                    c.getNome(),
+                                    c.getTipo()
+                            });
+                        }
+                    });
+                },
+                null
         );
     }
 
+    private Categoria coletarDados(Categoria existente) {
+        JTextField nome = new JTextField(existente != null ? existente.getNome() : "");
+
+        String[] tipos = {"Entrada", "Saída", "Investimento"};
+        JComboBox<String> tipo = new JComboBox<>(tipos);
+        if (existente != null) tipo.setSelectedItem(existente.getTipo());
+
+        JPanel painel = new JPanel(new GridLayout(2, 2, 5, 5));
+        painel.add(new JLabel("Nome:"));
+        painel.add(nome);
+        painel.add(new JLabel("Tipo:"));
+        painel.add(tipo);
+
+        int r = JOptionPane.showConfirmDialog(this, painel, "Dados da Categoria",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (r != JOptionPane.OK_OPTION) return null;
+
+        Categoria c = existente != null ? existente : new Categoria();
+        c.setNome(nome.getText().trim());
+        c.setTipo(tipo.getSelectedItem().toString());
+
+        return c;
+    }
+
+    private Integer getIdSelecionado() {
+        int linha = tabela.getSelectedRow();
+        if (linha == -1) return null;
+        return (Integer) modelo.getValueAt(linha, 0);
+    }
+
     private void adicionar() {
-        try {
-            String nome = JOptionPane.showInputDialog(this, "Nome da Categoria:");
-            if (nome == null || nome.trim().isEmpty()) return;
+        Categoria nova = coletarDados(null);
+        if (nova == null) return;
 
-            String tipo = escolherTipo(null);
-            if (tipo == null) return;
-
-            Categoria c = new Categoria();
-            c.setNome(nome.trim());
-            c.setTipo(tipo);
-
-            categoriaService.cadastrarCategoria(c);
-
-            JOptionPane.showMessageDialog(this, "Categoria cadastrada com sucesso.");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
-        }
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> categoriaService.cadastrarCategoria(nova),
+                () -> {
+                    JOptionPane.showMessageDialog(this, "Categoria cadastrada com sucesso!");
+                    carregarTabela();
+                }
+        );
     }
 
     private void editar() {
-        try {
-            String idStr = JOptionPane.showInputDialog(this, "ID da categoria:");
-            if (idStr == null || idStr.trim().isEmpty()) return;
-
-            int id = Integer.parseInt(idStr);
-            Categoria c = categoriaService.buscarPorId(id);
-
-            if (c == null) {
-                JOptionPane.showMessageDialog(this, "Categoria não encontrada.");
-                return;
-            }
-
-            String nome = JOptionPane.showInputDialog(this, "Nome da Categoria:", c.getNome());
-            if (nome == null || nome.trim().isEmpty()) return;
-
-            String tipo = escolherTipo(c.getTipo());
-            if (tipo == null) return;
-
-            c.setNome(nome.trim());
-            c.setTipo(tipo);
-
-            categoriaService.atualizarCategoria(c);
-
-            JOptionPane.showMessageDialog(this, "Categoria atualizada com sucesso.");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        Integer id = getIdSelecionado();
+        if (id == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma categoria para editar.");
+            return;
         }
+
+        TarefaComCarregamento.executarComRetorno(
+                (Frame) getOwner(),
+                () -> categoriaService.buscarPorId(id),
+                categoria -> {
+                    Categoria atualizada = coletarDados(categoria);
+                    if (atualizada == null) return;
+
+                    TarefaComCarregamento.executar(
+                            (Frame) getOwner(),
+                            () -> categoriaService.atualizarCategoria(atualizada),
+                            () -> {
+                                JOptionPane.showMessageDialog(this, "Categoria atualizada com sucesso!");
+                                carregarTabela();
+                            }
+                    );
+                }
+        );
     }
 
     private void excluir() {
-        try {
-            String idStr = JOptionPane.showInputDialog(this, "ID da categoria:");
-            if (idStr == null || idStr.trim().isEmpty()) return;
-
-            int id = Integer.parseInt(idStr);
-
-            categoriaService.excluirCategoria(id);
-
-            JOptionPane.showMessageDialog(this, "Categoria excluída com sucesso.");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
+        Integer id = getIdSelecionado();
+        if (id == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma categoria para excluir.");
+            return;
         }
+
+        int r = JOptionPane.showConfirmDialog(this,
+                "Excluir esta categoria?",
+                "Confirmar",
+                JOptionPane.YES_NO_OPTION);
+        if (r != JOptionPane.YES_OPTION) return;
+
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> categoriaService.excluirCategoria(id),
+                () -> {
+                    JOptionPane.showMessageDialog(this, "Categoria excluída com sucesso!");
+                    carregarTabela();
+                }
+        );
     }
 }

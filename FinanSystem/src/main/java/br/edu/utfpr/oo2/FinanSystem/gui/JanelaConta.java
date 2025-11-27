@@ -4,119 +4,187 @@ import br.edu.utfpr.oo2.FinanSystem.entities.Conta;
 import br.edu.utfpr.oo2.FinanSystem.service.ContaService;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.List;
 
 public class JanelaConta extends JDialog {
 
     private final ContaService contaService = new ContaService();
+    private JTable tabela;
+    private DefaultTableModel modelo;
 
     public JanelaConta(Frame owner, boolean modal) {
         super(owner, modal);
         init();
+        carregarTabela();
     }
 
     private void init() {
         setTitle("FinanSystem - Contas");
-        setSize(400, 250);
-        setLayout(new BorderLayout());
+        setSize(700, 400);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        JPanel painel = new JPanel(new GridLayout(4, 1, 10, 10));
+        modelo = new DefaultTableModel(
+                new Object[]{"ID", "Banco", "Agência", "Número", "Saldo", "Tipo"}, 0
+        ) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
 
-        JButton btnAdd = new JButton("Adicionar Conta");
-        JButton btnEdit = new JButton("Editar Conta");
-        JButton btnDelete = new JButton("Excluir Conta");
-        JButton btnFechar = new JButton("Fechar");
+        tabela = new JTable(modelo);
+        JScrollPane scroll = new JScrollPane(tabela);
 
-        painel.add(btnAdd);
-        painel.add(btnEdit);
-        painel.add(btnDelete);
+        JPanel botoes = new JPanel(new GridLayout(1, 4, 10, 0));
+        JButton add = new JButton("Adicionar");
+        JButton edit = new JButton("Editar");
+        JButton del = new JButton("Excluir");
+        JButton fechar = new JButton("Fechar");
 
-        add(painel, BorderLayout.CENTER);
-        add(btnFechar, BorderLayout.SOUTH);
+        botoes.add(add);
+        botoes.add(edit);
+        botoes.add(del);
+        botoes.add(fechar);
 
-        btnAdd.addActionListener(e -> adicionar());
-        btnEdit.addActionListener(e -> editar());
-        btnDelete.addActionListener(e -> excluir());
-        btnFechar.addActionListener(e -> dispose());
+        add(scroll, BorderLayout.CENTER);
+        add(botoes, BorderLayout.SOUTH);
+
+        add.addActionListener(e -> adicionar());
+        edit.addActionListener(e -> editar());
+        del.addActionListener(e -> excluir());
+        fechar.addActionListener(e -> dispose());
+    }
+
+    private void carregarTabela() {
+        // ✅ SUPER SIMPLES - sem try/catch!
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> {
+                    List<Conta> contas = contaService.listarContas();
+                    SwingUtilities.invokeLater(() -> {
+                        modelo.setRowCount(0);
+                        for (Conta c : contas) {
+                            modelo.addRow(new Object[]{
+                                    c.getId(),
+                                    c.getNomeBanco(),
+                                    c.getAgencia(),
+                                    c.getNumeroConta(),
+                                    c.getSaldoInicial(),
+                                    c.getTipoConta()
+                            });
+                        }
+                    });
+                },
+                null // Sem callback de sucesso específico
+        );
     }
 
     private Conta coletarDados(Conta existente) {
-        String nomeBanco = JOptionPane.showInputDialog(this, "Nome do Banco:",
-                existente != null ? existente.getNomeBanco() : "");
-        if (nomeBanco == null) return null;
-
-        String agencia = JOptionPane.showInputDialog(this, "Agência:",
-                existente != null ? existente.getAgencia() : "");
-        if (agencia == null) return null;
-
-        String numeroStr = JOptionPane.showInputDialog(this, "Número da Conta:",
-                existente != null ? existente.getNumeroConta() : "");
-        if (numeroStr == null) return null;
-
-        String saldoStr = JOptionPane.showInputDialog(this, "Saldo Inicial:",
-                existente != null ? existente.getSaldoInicial() : "");
-        if (saldoStr == null) return null;
+        JTextField nomeBanco = new JTextField(existente != null ? existente.getNomeBanco() : "");
+        JTextField agencia = new JTextField(existente != null ? existente.getAgencia() : "");
+        JTextField numero = new JTextField(existente != null ? String.valueOf(existente.getNumeroConta()) : "");
+        JTextField saldo = new JTextField(existente != null ? String.valueOf(existente.getSaldoInicial()) : "");
 
         String[] tipos = {"Corrente", "Poupança", "Salário", "Investimento"};
-        String tipo = (String) JOptionPane.showInputDialog(
-                this, "Tipo da Conta:", "Tipo",
-                JOptionPane.QUESTION_MESSAGE, null, tipos,
-                existente != null ? existente.getTipoConta() : tipos[0]
-        );
-        if (tipo == null) return null;
+        JComboBox<String> tipo = new JComboBox<>(tipos);
+        if (existente != null) tipo.setSelectedItem(existente.getTipoConta());
+
+        JPanel painel = new JPanel(new GridLayout(5, 2, 5, 5));
+        painel.add(new JLabel("Banco:"));
+        painel.add(nomeBanco);
+        painel.add(new JLabel("Agência:"));
+        painel.add(agencia);
+        painel.add(new JLabel("Número da Conta:"));
+        painel.add(numero);
+        painel.add(new JLabel("Saldo Inicial:"));
+        painel.add(saldo);
+        painel.add(new JLabel("Tipo:"));
+        painel.add(tipo);
+
+        int r = JOptionPane.showConfirmDialog(this, painel, "Dados da Conta", JOptionPane.OK_CANCEL_OPTION);
+        if (r != JOptionPane.OK_OPTION) return null;
 
         Conta c = existente != null ? existente : new Conta();
-        c.setNomeBanco(nomeBanco.trim());
-        c.setAgencia(agencia.trim());
-        c.setNumeroConta(Integer.parseInt(numeroStr.trim()));
-        c.setSaldoInicial(Double.parseDouble(saldoStr.trim()));
-        c.setTipoConta(tipo);
-
+        c.setNomeBanco(nomeBanco.getText().trim());
+        c.setAgencia(agencia.getText().trim());
+        c.setNumeroConta(Integer.parseInt(numero.getText().trim()));
+        c.setSaldoInicial(Double.parseDouble(saldo.getText().trim()));
+        c.setTipoConta(tipo.getSelectedItem().toString());
         return c;
     }
 
+    private Integer getIdSelecionado() {
+        int linha = tabela.getSelectedRow();
+        if (linha == -1) return null;
+        return (Integer) modelo.getValueAt(linha, 0);
+    }
+
     private void adicionar() {
-        try {
-            Conta conta = coletarDados(null);
-            if (conta == null) return;
-            contaService.cadastrarConta(conta);
-            JOptionPane.showMessageDialog(this, "Conta cadastrada com sucesso.");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
-        }
+        Conta nova = coletarDados(null);
+        if (nova == null) return;
+
+        // ✅ SUPER SIMPLES - 1 linha de código!
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> contaService.cadastrarConta(nova),
+                () -> {
+                    JOptionPane.showMessageDialog(this, "Conta cadastrada com sucesso!");
+                    carregarTabela();
+                }
+        );
     }
 
     private void editar() {
-        try {
-            String idStr = JOptionPane.showInputDialog(this, "ID da Conta:");
-            if (idStr == null) return;
-
-            Conta conta = contaService.buscarPorId(Integer.parseInt(idStr));
-            if (conta == null) {
-                JOptionPane.showMessageDialog(this, "Conta não encontrada.");
-                return;
-            }
-
-            Conta atualizada = coletarDados(conta);
-            if (atualizada == null) return;
-
-            contaService.atualizarConta(atualizada);
-            JOptionPane.showMessageDialog(this, "Conta atualizada com sucesso.");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+        Integer id = getIdSelecionado();
+        if (id == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma conta para editar.");
+            return;
         }
+
+        // ✅ SUPER SIMPLES - busca com callback
+        TarefaComCarregamento.executarComRetorno(
+                (Frame) getOwner(),
+                () -> contaService.buscarPorId(id),
+                conta -> {
+                    Conta atualizada = coletarDados(conta);
+                    if (atualizada == null) return;
+
+                    // Atualiza
+                    TarefaComCarregamento.executar(
+                            (Frame) getOwner(),
+                            () -> contaService.atualizarConta(atualizada),
+                            () -> {
+                                JOptionPane.showMessageDialog(this, "Conta atualizada com sucesso!");
+                                carregarTabela();
+                            }
+                    );
+                }
+        );
     }
 
     private void excluir() {
-        try {
-            String idStr = JOptionPane.showInputDialog(this, "ID da Conta:");
-            if (idStr == null) return;
-
-            contaService.excluirConta(Integer.parseInt(idStr));
-            JOptionPane.showMessageDialog(this, "Conta excluída com sucesso.");
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+        Integer id = getIdSelecionado();
+        if (id == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma conta para excluir.");
+            return;
         }
+
+        int r = JOptionPane.showConfirmDialog(this,
+                "Excluir esta conta?",
+                "Confirmar",
+                JOptionPane.YES_NO_OPTION);
+        if (r != JOptionPane.YES_OPTION) return;
+
+        // ✅ SUPER SIMPLES - 1 linha!
+        TarefaComCarregamento.executar(
+                (Frame) getOwner(),
+                () -> contaService.excluirConta(id),
+                () -> {
+                    JOptionPane.showMessageDialog(this, "Conta excluída com sucesso!");
+                    carregarTabela();
+                }
+        );
     }
 }
+
+

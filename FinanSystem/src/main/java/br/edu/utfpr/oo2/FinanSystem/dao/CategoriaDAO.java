@@ -1,9 +1,10 @@
 package br.edu.utfpr.oo2.FinanSystem.dao;
 
+import br.edu.utfpr.oo2.FinanSystem.entities.Categoria;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import br.edu.utfpr.oo2.FinanSystem.entities.Categoria;
 
 public class CategoriaDAO implements DAO<Categoria, Integer> {
 
@@ -16,13 +17,17 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
     public int cadastrar(Categoria categoria) throws SQLException {
         String sql = "INSERT INTO categoria (nome, tipo) VALUES (?, ?)";
 
-        try (PreparedStatement st = conn.prepareStatement(sql)) {
+        try (PreparedStatement st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, categoria.getNome());
             st.setString(2, categoria.getTipo());
-            return st.executeUpdate();
-        }
-    }
+            st.executeUpdate();
 
+            try (ResultSet rs = st.getGeneratedKeys()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return -1;
+    }
 
     public int atualizar(Categoria categoria) throws SQLException {
         String sql = "UPDATE categoria SET nome=?, tipo=? WHERE id=?";
@@ -35,7 +40,6 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
         }
     }
 
-
     public int excluir(Integer id) throws SQLException {
         String sql = "DELETE FROM categoria WHERE id=?";
 
@@ -44,7 +48,6 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
             return st.executeUpdate();
         }
     }
-
 
     public Categoria buscarPorId(Integer id) throws SQLException {
         String sql = "SELECT * FROM categoria WHERE id=?";
@@ -60,7 +63,6 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
         }
         return null;
     }
-
 
     public Categoria buscarPorNome(String nome) throws SQLException {
         String sql = "SELECT * FROM categoria WHERE nome=?";
@@ -92,7 +94,6 @@ public class CategoriaDAO implements DAO<Categoria, Integer> {
 
         return lista;
     }
-
 
     private Categoria mapearCategoria(ResultSet rs) throws SQLException {
         Categoria c = new Categoria();

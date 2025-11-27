@@ -15,29 +15,27 @@ public class ContaDAO implements DAO<Conta, Integer> {
 
     @Override
     public int cadastrar(Conta conta) throws SQLException {
-        String sql = "INSERT INTO conta (userId, nomeBanco, agencia, numeroConta, saldoInicial, tipoConta) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO conta (nomeBanco, agencia, numeroConta, saldoInicial, tipoConta) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement st = conn.prepareStatement(sql)) {
-            st.setInt(1, conta.getUserId());
-            st.setString(2, conta.getNomeBanco());
-            st.setString(3, conta.getAgencia());
-            st.setInt(4, conta.getNumeroConta());
-            st.setDouble(5, conta.getSaldoInicial());
-            st.setString(6, conta.getTipoConta());
+            st.setString(1, conta.getNomeBanco());
+            st.setString(2, conta.getAgencia());
+            st.setInt(3, conta.getNumeroConta());
+            st.setDouble(4, conta.getSaldoInicial());
+            st.setString(5, conta.getTipoConta());
             return st.executeUpdate();
         }
     }
 
     @Override
     public int atualizar(Conta conta) throws SQLException {
-        String sql = "UPDATE conta SET userId=?, nomeBanco=?, agencia=?, numeroConta=?, saldoInicial=?, tipoConta=? WHERE id=?";
+        String sql = "UPDATE conta SET nomeBanco=?, agencia=?, numeroConta=?, saldoInicial=?, tipoConta=? WHERE id=?";
         try (PreparedStatement st = conn.prepareStatement(sql)) {
-            st.setInt(1, conta.getUserId());
-            st.setString(2, conta.getNomeBanco());
-            st.setString(3, conta.getAgencia());
-            st.setInt(4, conta.getNumeroConta());
-            st.setDouble(5, conta.getSaldoInicial());
-            st.setString(6, conta.getTipoConta());
-            st.setInt(7, conta.getId());
+            st.setString(1, conta.getNomeBanco());
+            st.setString(2, conta.getAgencia());
+            st.setInt(3, conta.getNumeroConta());
+            st.setDouble(4, conta.getSaldoInicial());
+            st.setString(5, conta.getTipoConta());
+            st.setInt(6, conta.getId());
             return st.executeUpdate();
         }
     }
@@ -94,7 +92,6 @@ public class ContaDAO implements DAO<Conta, Integer> {
     private Conta montarObjeto(ResultSet rs) throws SQLException {
         return new Conta(
                 rs.getInt("id"),
-                rs.getInt("userId"),
                 rs.getString("nomeBanco"),
                 rs.getString("agencia"),
                 rs.getInt("numeroConta"),

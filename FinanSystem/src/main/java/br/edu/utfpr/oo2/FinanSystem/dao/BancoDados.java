@@ -35,18 +35,20 @@ public class BancoDados {
 		
 		return conn;
 	}
-	
+
 	private static Properties carregarPropriedades() throws IOException {
-		
-		InputStream propriedadesBanco = BancoDados.class.getClassLoader().getResourceAsStream("./config/database.properties");
-	
-		
+
+		InputStream propriedadesBanco =
+				BancoDados.class.getClassLoader().getResourceAsStream("config/database.properties");
+
+
 		Properties props = new Properties();
 		props.load(propriedadesBanco);
-		
+
 		return props;
 	}
-	
+
+
 	public static void finalizarStatement(Statement st) throws SQLException {
 		
 		if (st != null) {

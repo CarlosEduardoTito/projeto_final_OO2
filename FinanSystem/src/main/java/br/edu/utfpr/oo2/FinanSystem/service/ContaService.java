@@ -12,42 +12,51 @@ public class ContaService {
 
     public void cadastrarConta(Conta conta) throws Exception {
         validar(conta);
-        try (Connection conn = BancoDados.conectar()) {
-            ContaDAO dao = new ContaDAO(conn);
-            if (dao.buscarPorNumero(conta.getNumeroConta()) != null) {
-                throw new Exception("Já existe uma conta com esse número.");
-            }
-            dao.cadastrar(conta);
-        }
+
+        Connection conn = BancoDados.conectar();
+        ContaDAO dao = new ContaDAO(conn);
+
+        if (dao.buscarPorNumero(conta.getNumeroConta()) != null)
+            throw new Exception("Já existe uma conta com esse número.");
+
+        int linhas = dao.cadastrar(conta);
+        if (linhas == 0)
+            throw new Exception("Erro ao cadastrar conta.");
     }
+
 
     public void atualizarConta(Conta conta) throws Exception {
         validar(conta);
-        try (Connection conn = BancoDados.conectar()) {
-            ContaDAO dao = new ContaDAO(conn);
-            dao.atualizar(conta);
-        }
+
+        Connection conn = BancoDados.conectar();
+        ContaDAO dao = new ContaDAO(conn);
+
+        int linhas = dao.atualizar(conta);
+        if (linhas == 0)
+            throw new Exception("Nenhuma conta foi atualizada.");
     }
 
-    public void excluirConta(Integer id) throws SQLException, IOException {
-        try (Connection conn = BancoDados.conectar()) {
-            ContaDAO dao = new ContaDAO(conn);
-            dao.excluir(id);
-        }
+
+    public void excluirConta(Integer id) throws Exception {
+        Connection conn = BancoDados.conectar();
+        ContaDAO dao = new ContaDAO(conn);
+
+        int linhas = dao.excluir(id);
+        if (linhas == 0)
+            throw new Exception("A conta não existe.");
     }
+
 
     public Conta buscarPorId(Integer id) throws SQLException, IOException {
-        try (Connection conn = BancoDados.conectar()) {
-            ContaDAO dao = new ContaDAO(conn);
-            return dao.buscarPorId(id);
-        }
+        Connection conn = BancoDados.conectar();
+        ContaDAO dao = new ContaDAO(conn);
+        return dao.buscarPorId(id);
     }
 
     public List<Conta> listarContas() throws SQLException, IOException {
-        try (Connection conn = BancoDados.conectar()) {
-            ContaDAO dao = new ContaDAO(conn);
-            return dao.buscarTodos();
-        }
+        Connection conn = BancoDados.conectar();
+        ContaDAO dao = new ContaDAO(conn);
+        return dao.buscarTodos();
     }
 
     private void validar(Conta c) throws Exception {
