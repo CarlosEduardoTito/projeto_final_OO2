@@ -1,0 +1,202 @@
+package br.edu.utfpr.oo2.FinanSystem.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.text.DecimalFormat;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+import br.edu.utfpr.oo2.FinanSystem.entities.MetaFinanceira;
+import br.edu.utfpr.oo2.FinanSystem.service.MetaFinanceiraService;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
+public class JanelaPlanejamento extends JDialog {
+
+	private JTextField txtDescricao;
+    private JTextField txtValor;
+    private JComboBox<String> cbTipo;
+    private JTable tabelaMetas;
+    private DefaultTableModel tableModel;
+    
+    private MetaFinanceiraService service = new MetaFinanceiraService();
+    private Integer idUsuarioLogado;
+	
+	
+	
+
+	public JanelaPlanejamento(JFrame owner, Integer idUsuario) {
+		
+		super(owner, "Planejamento Financeiro", true);
+		this.idUsuarioLogado = idUsuario;
+		
+		setSize(600, 450);
+		setLocationRelativeTo(owner);
+		setLayout(new BorderLayout(10, 10));
+		
+		iniciarComponentes();
+		carregarTabela();
+		
+	}
+	
+	private void iniciarComponentes() {
+		
+		JPanel panelForm = new JPanel(new GridLayout(4, 2, 5, 5));
+		panelForm.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		getContentPane().add(panelForm, BorderLayout.NORTH);
+		
+		txtDescricao = new JTextField();
+		txtValor = new JTextField();
+		
+		cbTipo = new JComboBox<>(new String[] {"Longo Prazo", "Despesa Ocasional"});
+		
+		panelForm.add(new JLabel("Descrição da Meta:"));
+		panelForm.add(txtDescricao);
+		
+		panelForm.add(new JLabel("Valor Mensal (R$):"));
+		panelForm.add(txtValor);
+		
+		panelForm.add(new JLabel("Tipo de Meta:"));
+		panelForm.add(cbTipo);
+		
+		JButton btnSalvar = new JButton("Salvar Meta");
+		btnSalvar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				salvarMeta();
+				
+			}
+		});
+		btnSalvar.setBackground(new Color(0, 128, 0));
+		btnSalvar.setForeground(Color.WHITE);
+		
+		panelForm.add(new JLabel(""));
+		panelForm.add(btnSalvar);
+		
+		
+		String[] colunas = {"ID", "Descrição", "Valor (R$)", "Tipo"};
+		tableModel = new DefaultTableModel(colunas, 0) {
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+		tabelaMetas = new JTable(tableModel);
+		JScrollPane scrollPane = new JScrollPane(tabelaMetas);
+		
+		JPanel panelCentro = new JPanel(new BorderLayout());
+		JLabel lblTituloTabela = new JLabel("Suas metas Cadastradas");
+		lblTituloTabela.setFont(new Font("Arial", Font.BOLD, 14));
+		panelCentro.add(lblTituloTabela,BorderLayout.NORTH);
+		panelCentro.add(scrollPane, BorderLayout.CENTER);
+		
+		getContentPane().add(panelCentro, BorderLayout.CENTER);
+		
+		
+	}
+	
+	private void carregarTabela() {
+		
+		tableModel.setRowCount(0);
+		
+		DecimalFormat df = new DecimalFormat("#,##0.00");
+		
+		try {
+			List<MetaFinanceira> lista = service.listarPorUsuario(idUsuarioLogado);
+			for(MetaFinanceira m : lista) {
+				
+				tableModel.addRow(new Object[] {
+						m.getId(),
+						m.getDescricao(),
+						df.format(m.getValorMensal()),
+						m.getTipoMeta()
+				});
+				
+			}
+		} catch(Exception e) {
+			
+			JOptionPane.showMessageDialog(this, "Erro ao carregar metas: " + e.getMessage());
+			
+		}
+	}
+	
+	private void salvarMeta() {
+		
+		try {
+			
+			String desc = txtDescricao.getText();
+			
+			String valorStr = txtValor.getText().replace(",", ".");
+			double valor = Double.parseDouble(valorStr);
+			String tipo = (String) cbTipo.getSelectedItem();
+			
+			MetaFinanceira meta = new MetaFinanceira();
+			
+			meta.setUsuarioId(idUsuarioLogado);
+			meta.setDescricao(desc);
+			meta.setValorMensal(valor);
+			meta.setTipoMeta(tipo);
+			
+			service.cadastrar(meta);
+			
+			JOptionPane.showMessageDialog(this, "Meta salva com sucesso.");
+			
+			limparCampos();
+			carregarTabela();
+			
+		} catch(NumberFormatException ex) {
+			
+			JOptionPane.showMessageDialog(this, "Valor inválido! Digite apenas números.", "Erro", JOptionPane.ERROR_MESSAGE);
+			
+		} catch (Exception ex) {
+			
+			JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+			
+		}
+		
+	}
+	
+	private void limparCampos() {
+		
+		txtDescricao.setText("");
+		txtValor.setText("");
+		
+	}
+	
+    // MÉTODO MAIN APENAS PARA TESTES
+    public static void main(String[] args) {
+        // Cria um frame "falso" para ser o dono da janela
+        JFrame frameTeste = new JFrame();
+        frameTeste.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        // Simula o ID do usuário logado (ex: usuário 1)
+        // Certifique-se de que existe um usuário com ID 1 no seu banco para testar!
+        Integer idUsuarioTeste = 1; 
+
+        try {
+            // Abre a janela de planejamento
+            JanelaPlanejamento janela = new JanelaPlanejamento(frameTeste, idUsuarioTeste);
+            janela.setVisible(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        System.exit(0);
+    }
+
+
+}
