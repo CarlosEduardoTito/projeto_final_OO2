@@ -1,12 +1,13 @@
 package br.edu.utfpr.oo2.FinanSystem.service;
 
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
 import br.edu.utfpr.oo2.FinanSystem.dao.ContaDAO;
 import br.edu.utfpr.oo2.FinanSystem.entities.Conta;
 import br.edu.utfpr.oo2.FinanSystem.dao.BancoDados;
-import java.sql.Connection;
 
 public class ContaService {
 
@@ -24,7 +25,6 @@ public class ContaService {
             throw new Exception("Erro ao cadastrar conta.");
     }
 
-
     public void atualizarConta(Conta conta) throws Exception {
         validar(conta);
 
@@ -36,7 +36,6 @@ public class ContaService {
             throw new Exception("Nenhuma conta foi atualizada.");
     }
 
-
     public void excluirConta(Integer id) throws Exception {
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
@@ -45,7 +44,6 @@ public class ContaService {
         if (linhas == 0)
             throw new Exception("A conta não existe.");
     }
-
 
     public Conta buscarPorId(Integer id) throws SQLException, IOException {
         Connection conn = BancoDados.conectar();

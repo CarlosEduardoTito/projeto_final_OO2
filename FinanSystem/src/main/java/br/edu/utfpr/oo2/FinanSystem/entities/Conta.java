@@ -3,6 +3,7 @@ package br.edu.utfpr.oo2.FinanSystem.entities;
 public class Conta {
 
     private Integer id;
+    private Integer userId;
     private String nomeBanco;
     private String agencia;
     private Integer numeroConta;
@@ -11,8 +12,9 @@ public class Conta {
 
     public Conta() {}
 
-    public Conta(Integer id, String nomeBanco, String agencia, Integer numeroConta, Double saldoInicial, String tipoConta) {
+    public Conta(Integer id, Integer userId, String nomeBanco, String agencia, Integer numeroConta, Double saldoInicial, String tipoConta) {
         this.id = id;
+        this.userId = userId;
         this.nomeBanco = nomeBanco;
         this.agencia = agencia;
         this.numeroConta = numeroConta;
@@ -20,7 +22,8 @@ public class Conta {
         this.tipoConta = tipoConta;
     }
 
-    public Conta(String nomeBanco, String agencia, Integer numeroConta, Double saldoInicial, String tipoConta) {
+    public Conta(Integer userId, String nomeBanco, String agencia, Integer numeroConta, Double saldoInicial, String tipoConta) {
+        this.userId = userId;
         this.nomeBanco = nomeBanco;
         this.agencia = agencia;
         this.numeroConta = numeroConta;
@@ -30,6 +33,9 @@ public class Conta {
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
+
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
 
     public String getNomeBanco() { return nomeBanco; }
     public void setNomeBanco(String nomeBanco) { this.nomeBanco = nomeBanco; }
@@ -50,5 +56,5 @@ public class Conta {
     public String toString() {
         return nomeBanco + " - " + numeroConta;
     }
-}
 
+}

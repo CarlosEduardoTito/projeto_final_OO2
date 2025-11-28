@@ -1,27 +1,48 @@
 package br.edu.utfpr.oo2.FinanSystem.dao;
 
+import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
 
 public class TransacaoDAO implements DAO<Transacao, Integer> {
 
     private final Connection conn;
 
+
     public TransacaoDAO(Connection conn) {
         this.conn = conn;
     }
 
+
+    private Transacao mapearTransacao(ResultSet rs) throws SQLException {
+        Transacao t = new Transacao();
+        t.setId(rs.getInt("id"));
+        // the Transacao entity you sent doesn't have userId field — so we don't set it here
+        t.setContaId(rs.getInt("contaId"));
+        t.setCategoriaId(rs.getInt("categoriaId"));
+        t.setDescricao(rs.getString("descricao"));
+        t.setValor(rs.getDouble("valor"));
+        Date dt = rs.getDate("data");
+        if (dt != null) t.setData(dt.toLocalDate());
+        return t;
+    }
+
+    @Override
     public int cadastrar(Transacao t) throws SQLException {
-        String sql = "INSERT INTO transacao (idConta, idCategoria, descricao, valor, data) VALUES (?, ?, ?, ?, ?)";
+
+        String sql = "INSERT INTO transacao (contaId, categoriaId, descricao, valor, data) VALUES (?, ?, ?, ?, ?)";
+
         try (PreparedStatement st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setInt(1, t.getContaId());
             st.setInt(2, t.getCategoriaId());
             st.setString(3, t.getDescricao());
             st.setDouble(4, t.getValor());
             st.setDate(5, Date.valueOf(t.getData()));
+
             int rows = st.executeUpdate();
+
             try (ResultSet rs = st.getGeneratedKeys()) {
                 if (rs.next()) {
                     t.setId(rs.getInt(1));
@@ -31,8 +52,10 @@ public class TransacaoDAO implements DAO<Transacao, Integer> {
         }
     }
 
+    @Override
     public int atualizar(Transacao t) throws SQLException {
-        String sql = "UPDATE transacao SET idConta=?, idCategoria=?, descricao=?, valor=?, data=? WHERE id=?";
+        String sql = "UPDATE transacao SET contaId=?, categoriaId=?, descricao=?, valor=?, data=? WHERE id=?";
+
         try (PreparedStatement st = conn.prepareStatement(sql)) {
             st.setInt(1, t.getContaId());
             st.setInt(2, t.getCategoriaId());
@@ -44,6 +67,7 @@ public class TransacaoDAO implements DAO<Transacao, Integer> {
         }
     }
 
+    @Override
     public int excluir(Integer id) throws SQLException {
         String sql = "DELETE FROM transacao WHERE id=?";
         try (PreparedStatement st = conn.prepareStatement(sql)) {
@@ -52,54 +76,51 @@ public class TransacaoDAO implements DAO<Transacao, Integer> {
         }
     }
 
+
+    @Override
     public Transacao buscarPorId(Integer id) throws SQLException {
         String sql = "SELECT * FROM transacao WHERE id=?";
         try (PreparedStatement st = conn.prepareStatement(sql)) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) {
-                if (rs.next()) {
-                    return mapear(rs);
-                }
+                if (rs.next()) return mapearTransacao(rs);
             }
         }
         return null;
     }
 
+
+    @Override
     public List<Transacao> buscarTodos() throws SQLException {
         String sql = "SELECT * FROM transacao ORDER BY data DESC";
         List<Transacao> lista = new ArrayList<>();
         try (PreparedStatement st = conn.prepareStatement(sql);
              ResultSet rs = st.executeQuery()) {
-            while (rs.next()) {
-                lista.add(mapear(rs));
-            }
+            while (rs.next()) lista.add(mapearTransacao(rs));
         }
         return lista;
     }
 
+
     public List<Transacao> buscarPorConta(int contaId) throws SQLException {
-        String sql = "SELECT * FROM transacao WHERE idConta = ? ORDER BY data DESC";
+        String sql = "SELECT * FROM transacao WHERE contaId = ? ORDER BY data DESC";
         List<Transacao> lista = new ArrayList<>();
         try (PreparedStatement st = conn.prepareStatement(sql)) {
             st.setInt(1, contaId);
             try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(mapear(rs));
-                }
+                while (rs.next()) lista.add(mapearTransacao(rs));
             }
         }
         return lista;
     }
 
     public List<Transacao> buscarPorCategoria(int categoriaId) throws SQLException {
-        String sql = "SELECT * FROM transacao WHERE idCategoria = ? ORDER BY data DESC";
+        String sql = "SELECT * FROM transacao WHERE categoriaId = ? ORDER BY data DESC";
         List<Transacao> lista = new ArrayList<>();
         try (PreparedStatement st = conn.prepareStatement(sql)) {
             st.setInt(1, categoriaId);
             try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(mapear(rs));
-                }
+                while (rs.next()) lista.add(mapearTransacao(rs));
             }
         }
         return lista;
@@ -112,24 +133,10 @@ public class TransacaoDAO implements DAO<Transacao, Integer> {
             st.setDate(1, inicio);
             st.setDate(2, fim);
             try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    lista.add(mapear(rs));
-                }
+                while (rs.next()) lista.add(mapearTransacao(rs));
             }
         }
         return lista;
     }
-
-    private Transacao mapear(ResultSet rs) throws SQLException {
-        return new Transacao(
-                rs.getInt("id"),
-                rs.getInt("idConta"),
-                rs.getInt("idCategoria"),
-                rs.getString("descricao"),
-                rs.getDouble("valor"),
-                rs.getDate("data").toLocalDate()
-        );
-
-    }
-
 }
+

@@ -56,7 +56,7 @@ public class JanelaConta extends JDialog {
     }
 
     private void carregarTabela() {
-        // ✅ SUPER SIMPLES - sem try/catch!
+
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
                 () -> {
@@ -75,7 +75,7 @@ public class JanelaConta extends JDialog {
                         }
                     });
                 },
-                null // Sem callback de sucesso específico
+                null
         );
     }
 
@@ -110,8 +110,13 @@ public class JanelaConta extends JDialog {
         c.setNumeroConta(Integer.parseInt(numero.getText().trim()));
         c.setSaldoInicial(Double.parseDouble(saldo.getText().trim()));
         c.setTipoConta(tipo.getSelectedItem().toString());
+
+
+        c.setUserId(1);
+
         return c;
     }
+
 
     private Integer getIdSelecionado() {
         int linha = tabela.getSelectedRow();
@@ -123,7 +128,7 @@ public class JanelaConta extends JDialog {
         Conta nova = coletarDados(null);
         if (nova == null) return;
 
-        // ✅ SUPER SIMPLES - 1 linha de código!
+
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
                 () -> contaService.cadastrarConta(nova),
@@ -141,7 +146,7 @@ public class JanelaConta extends JDialog {
             return;
         }
 
-        // ✅ SUPER SIMPLES - busca com callback
+
         TarefaComCarregamento.executarComRetorno(
                 (Frame) getOwner(),
                 () -> contaService.buscarPorId(id),
@@ -149,7 +154,7 @@ public class JanelaConta extends JDialog {
                     Conta atualizada = coletarDados(conta);
                     if (atualizada == null) return;
 
-                    // Atualiza
+
                     TarefaComCarregamento.executar(
                             (Frame) getOwner(),
                             () -> contaService.atualizarConta(atualizada),
@@ -175,7 +180,6 @@ public class JanelaConta extends JDialog {
                 JOptionPane.YES_NO_OPTION);
         if (r != JOptionPane.YES_OPTION) return;
 
-        // ✅ SUPER SIMPLES - 1 linha!
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
                 () -> contaService.excluirConta(id),
@@ -186,5 +190,3 @@ public class JanelaConta extends JDialog {
         );
     }
 }
-
-
