@@ -1,5 +1,7 @@
 package br.edu.utfpr.oo2.FinanSystem.gui;
 
+import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -12,11 +14,13 @@ public class TelaInicialFinanceiro extends JFrame {
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
 
+    private final Usuario usuario;
+
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    TelaInicialFinanceiro frame = new TelaInicialFinanceiro();
+                    TelaInicialFinanceiro frame = new TelaInicialFinanceiro(new Usuario());
                     frame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -25,7 +29,8 @@ public class TelaInicialFinanceiro extends JFrame {
         });
     }
 
-    public TelaInicialFinanceiro() {
+    public TelaInicialFinanceiro(Usuario usuario) {
+        this.usuario = usuario;
         iniciarComponentes();
     }
 

@@ -206,6 +206,10 @@ public class JanelaCadastroUsuario extends JDialog {
                     () -> {
                         JOptionPane.showMessageDialog(this,
                                 "Usuário cadastrado com sucesso!");
+
+                        TelaInicialFinanceiro telaInicialFinanceiro = new TelaInicialFinanceiro(usuario);
+                        telaInicialFinanceiro.setVisible(true);
+
                         dispose();
                     },
                     ex -> {

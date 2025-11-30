@@ -132,6 +132,10 @@ public class JanelaLogin extends JFrame {
                             "Bem-vindo, " + usuario.getNomeCompleto() + "!");
                     // Aqui você pode abrir a próxima janela, por exemplo:
                     // abrirTelaPrincipal(usuario);
+
+                    TelaInicialFinanceiro telaInicialFinanceiro = new TelaInicialFinanceiro(usuario);
+                    telaInicialFinanceiro.setVisible(true);
+                    this.dispose();
                 },
                 ex -> {
                     JOptionPane.showMessageDialog(this,
