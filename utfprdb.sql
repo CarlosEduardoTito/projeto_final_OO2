@@ -2,19 +2,24 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+ /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+ /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+ /*!40101 SET NAMES utf8mb4 */;
 
-CREATE DATABASE IF NOT EXISTS `utfprdb` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+CREATE DATABASE IF NOT EXISTS `utfprdb`
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+
 USE `utfprdb`;
 
+-- APAGA AS TABELAS NA ORDEM CORRETA
 DROP TABLE IF EXISTS `transacao`;
 DROP TABLE IF EXISTS `meta_financeira`;
 DROP TABLE IF EXISTS `categoria`;
 DROP TABLE IF EXISTS `conta`;
 DROP TABLE IF EXISTS `usuario`;
 
+-- TABELA USUARIO
 CREATE TABLE `usuario` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `nome_completo` VARCHAR(150) NOT NULL,
@@ -26,16 +31,25 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABELA CONTA (AGORA COM userId)
 CREATE TABLE `conta` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `userId` INT(11) NOT NULL,
   `nomeBanco` VARCHAR(100) NOT NULL,
   `agencia` VARCHAR(20) NOT NULL,
   `numeroConta` INT(11) NOT NULL,
   `saldoInicial` DECIMAL(15,2) NOT NULL DEFAULT 0.00,
   `tipoConta` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_conta_user` (`userId`),
+  CONSTRAINT `fk_conta_usuario`
+    FOREIGN KEY (`userId`)
+    REFERENCES `usuario` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABELA CATEGORIA
 CREATE TABLE `categoria` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(100) NOT NULL,
@@ -43,6 +57,7 @@ CREATE TABLE `categoria` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABELA TRANSACAO
 CREATE TABLE `transacao` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `idConta` INT(11) NOT NULL,
@@ -54,16 +69,17 @@ CREATE TABLE `transacao` (
   KEY `idx_conta` (`idConta`),
   KEY `idx_categoria` (`idCategoria`),
   KEY `idx_data` (`data`),
-  CONSTRAINT `fk_transacao_conta` FOREIGN KEY (`idConta`) 
-    REFERENCES `conta` (`id`) 
-    ON DELETE RESTRICT 
+  CONSTRAINT `fk_transacao_conta` FOREIGN KEY (`idConta`)
+    REFERENCES `conta` (`id`)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_transacao_categoria` FOREIGN KEY (`idCategoria`) 
-    REFERENCES `categoria` (`id`) 
-    ON DELETE RESTRICT 
+  CONSTRAINT `fk_transacao_categoria` FOREIGN KEY (`idCategoria`)
+    REFERENCES `categoria` (`id`)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- TABELA META FINANCEIRA
 CREATE TABLE `meta_financeira` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `usuarioId` INT(11) NOT NULL,
@@ -72,12 +88,12 @@ CREATE TABLE `meta_financeira` (
   `tipoMeta` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_usuario` (`usuarioId`),
-  CONSTRAINT `fk_meta_usuario` FOREIGN KEY (`usuarioId`) 
-    REFERENCES `usuario` (`id`) 
-    ON DELETE CASCADE 
+  CONSTRAINT `fk_meta_usuario` FOREIGN KEY (`usuarioId`)
+    REFERENCES `usuario` (`id`)
+    ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+ /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+ /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
