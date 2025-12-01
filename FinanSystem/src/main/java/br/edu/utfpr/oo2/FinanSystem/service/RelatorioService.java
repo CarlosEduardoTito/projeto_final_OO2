@@ -38,7 +38,7 @@ public class RelatorioService {
 
     public void exportarPdf(List<Transacao> transacoes, String caminhoArquivo, Usuario usuario) throws Exception {
         Map<Integer, Categoria> mapaCategorias = carregarMapaCategoriasObjetos();
-        Map<Integer, String> mapaContas = carregarMapaContas();
+        Map<Integer, String> mapaContas = carregarMapaContas(usuario.getId());
 
         PdfWriter writer = new PdfWriter(caminhoArquivo);
         PdfDocument pdf = new PdfDocument(writer);
@@ -88,7 +88,7 @@ public class RelatorioService {
     public void exportarExcel(List<Transacao> transacoes, String caminhoArquivo, Usuario usuario) throws Exception {
 
         Map<Integer, Categoria> mapaCategorias = carregarMapaCategoriasObjetos();
-        Map<Integer, String> mapaContas = carregarMapaContas();
+        Map<Integer, String> mapaContas = carregarMapaContas(usuario.getId());
 
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Relatório");
@@ -248,11 +248,13 @@ public class RelatorioService {
         return map;
     }
 
-    private Map<Integer, String> carregarMapaContas() {
+    private Map<Integer, String> carregarMapaContas(Integer userId) {
         Map<Integer, String> map = new HashMap<>();
         try {
-            List<Conta> lista = contaService.listarContas();
-            for (Conta c : lista) map.put(c.getId(), c.getNomeBanco());
+            List<Conta> lista = contaService.listarContas(userId); 
+            for (Conta c : lista) {
+                 map.put(c.getId(), c.getNomeBanco());
+            }
         } catch (Exception ignored) {}
         return map;
     }
