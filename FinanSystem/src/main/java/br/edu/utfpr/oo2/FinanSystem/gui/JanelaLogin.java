@@ -106,7 +106,6 @@ public class JanelaLogin extends JFrame {
         String nomeUsuario = txtNomeUsuario.getText().trim();
         String senha = new String(txtSenha.getPassword());
 
-        // Validação de campos vazios
         if (nomeUsuario.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "O campo 'Nome de usuário' é obrigatório!",
@@ -129,8 +128,6 @@ public class JanelaLogin extends JFrame {
                 usuario -> {
                     JOptionPane.showMessageDialog(this,
                             "Bem-vindo, " + usuario.getNomeCompleto() + "!");
-                    // Aqui você pode abrir a próxima janela, por exemplo:
-                    // abrirTelaPrincipal(usuario);
 
                     TelaInicialFinanceiro telaInicialFinanceiro = new TelaInicialFinanceiro(usuario);
                     telaInicialFinanceiro.setVisible(true);
