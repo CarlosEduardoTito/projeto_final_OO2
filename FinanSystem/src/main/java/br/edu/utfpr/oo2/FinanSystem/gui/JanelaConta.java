@@ -1,6 +1,7 @@
 package br.edu.utfpr.oo2.FinanSystem.gui;
 
 import br.edu.utfpr.oo2.FinanSystem.entities.Conta;
+import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
 import br.edu.utfpr.oo2.FinanSystem.service.ContaService;
 
 import javax.swing.*;
@@ -11,11 +12,13 @@ import java.util.List;
 public class JanelaConta extends JDialog {
 
     private final ContaService contaService = new ContaService();
+    private final Usuario usuario;
     private JTable tabela;
     private DefaultTableModel modelo;
 
-    public JanelaConta(Frame owner, boolean modal) {
+    public JanelaConta(Frame owner, boolean modal, Usuario usuario) {
         super(owner, modal);
+        this.usuario = usuario;
         init();
         carregarTabela();
     }
@@ -64,7 +67,7 @@ public class JanelaConta extends JDialog {
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
                 () -> {
-                    List<Conta> contas = contaService.listarContas();
+                    List<Conta> contas = contaService.listarContas(usuario.getId());
                     SwingUtilities.invokeLater(() -> {
                         modelo.setRowCount(0);
                         for (Conta c : contas) {
@@ -115,7 +118,7 @@ public class JanelaConta extends JDialog {
         c.setSaldoInicial(Double.parseDouble(saldo.getText().trim()));
         c.setTipoConta(tipo.getSelectedItem().toString());
 
-        c.setUserId(1);
+        c.setUserId(usuario.getId());
 
         return c;
     }
@@ -149,19 +152,31 @@ public class JanelaConta extends JDialog {
 
         TarefaComCarregamento.executarComRetorno(
                 (Frame) getOwner(),
-                () -> contaService.buscarPorId(id),
+                () -> contaService.buscarPorId(id, usuario.getId()),
                 conta -> {
                     Conta atualizada = coletarDados(conta);
                     if (atualizada == null) return;
 
                     TarefaComCarregamento.executar(
                             (Frame) getOwner(),
-                            () -> contaService.atualizarConta(atualizada),
+                            () -> contaService.atualizarConta(atualizada, usuario.getId()),
                             () -> {
                                 JOptionPane.showMessageDialog(this, "Conta atualizada com sucesso!");
                                 carregarTabela();
+                            },
+                            ex -> {
+                                JOptionPane.showMessageDialog(this,
+                                        ex.getMessage(),
+                                        "Erro",
+                                        JOptionPane.ERROR_MESSAGE);
                             }
                     );
+                },
+                ex -> {
+                    JOptionPane.showMessageDialog(this,
+                            ex.getMessage(),
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
                 }
         );
     }
@@ -181,10 +196,16 @@ public class JanelaConta extends JDialog {
 
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
-                () -> contaService.excluirConta(id),
+                () -> contaService.excluirConta(id, usuario.getId()),
                 () -> {
                     JOptionPane.showMessageDialog(this, "Conta excluída com sucesso!");
                     carregarTabela();
+                },
+                ex -> {
+                    JOptionPane.showMessageDialog(this,
+                            ex.getMessage(),
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
                 }
         );
     }
@@ -213,10 +234,16 @@ public class JanelaConta extends JDialog {
 
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
-                () -> contaService.transferir(idOrigem, idDestino, v),
+                () -> contaService.transferir(idOrigem, idDestino, v, usuario.getId()),
                 () -> {
                     JOptionPane.showMessageDialog(this, "Transferência realizada com sucesso!");
                     carregarTabela();
+                },
+                ex -> {
+                    JOptionPane.showMessageDialog(this,
+                            ex.getMessage(),
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
                 }
         );
     }

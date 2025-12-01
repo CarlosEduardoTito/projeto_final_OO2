@@ -6,6 +6,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import br.edu.utfpr.oo2.FinanSystem.dao.BancoDados;
 import br.edu.utfpr.oo2.FinanSystem.dao.ContaDAO;
@@ -17,7 +18,7 @@ import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
 
 public class TransacaoService {
 
-    public void cadastrarTransacao(Transacao t) throws Exception {
+    public void cadastrarTransacao(Transacao t, Integer userId) throws Exception {
         validarBasico(t);
         Connection conn = BancoDados.conectar();
         try {
@@ -29,6 +30,10 @@ public class TransacaoService {
 
             Conta conta = contaDao.buscarPorId(t.getContaId());
             if (conta == null) throw new Exception("Conta não encontrada.");
+            
+            if (!conta.getUserId().equals(userId)) {
+                throw new Exception("Você não tem permissão para criar transações nesta conta.");
+            }
 
             Categoria categoria = catDao.buscarPorId(t.getCategoriaId());
             if (categoria == null) throw new Exception("Categoria não encontrada.");
@@ -45,7 +50,7 @@ public class TransacaoService {
         }
     }
 
-    public void atualizarTransacao(Transacao t) throws Exception {
+    public void atualizarTransacao(Transacao t, Integer userId) throws Exception {
         validarBasico(t);
         Connection conn = BancoDados.conectar();
         try {
@@ -57,6 +62,16 @@ public class TransacaoService {
 
             Transacao existente = transDao.buscarPorId(t.getId());
             if (existente == null) throw new Exception("Transação não encontrada.");
+            
+            Conta contaExistente = contaDao.buscarPorId(existente.getContaId());
+            if (contaExistente == null || !contaExistente.getUserId().equals(userId)) {
+                throw new Exception("Você não tem permissão para atualizar esta transação.");
+            }
+            
+            Conta contaNova = contaDao.buscarPorId(t.getContaId());
+            if (contaNova == null || !contaNova.getUserId().equals(userId)) {
+                throw new Exception("Você não tem permissão para usar esta conta.");
+            }
 
             reverterEAplicar(existente, t, contaDao, catDao, transDao);
 
@@ -69,7 +84,7 @@ public class TransacaoService {
         }
     }
 
-    public void excluirTransacao(Integer id) throws Exception {
+    public void excluirTransacao(Integer id, Integer userId) throws Exception {
         Connection conn = BancoDados.conectar();
         try {
             conn.setAutoCommit(false);
@@ -83,6 +98,10 @@ public class TransacaoService {
 
             Conta conta = contaDao.buscarPorId(existente.getContaId());
             if (conta == null) throw new Exception("Conta não encontrada.");
+            
+            if (!conta.getUserId().equals(userId)) {
+                throw new Exception("Você não tem permissão para excluir esta transação.");
+            }
 
             Categoria categoria = catDao.buscarPorId(existente.getCategoriaId());
             if (categoria == null) throw new Exception("Categoria não encontrada.");
@@ -99,21 +118,50 @@ public class TransacaoService {
         }
     }
 
-    public Transacao buscarPorId(Integer id) throws SQLException, IOException {
+    public Transacao buscarPorId(Integer id, Integer userId) throws SQLException, IOException, Exception {
         Connection conn = BancoDados.conectar();
+        ContaDAO contaDao = new ContaDAO(conn);
         TransacaoDAO dao = new TransacaoDAO(conn);
-        return dao.buscarPorId(id);
+        Transacao transacao = dao.buscarPorId(id);
+        
+        if (transacao == null) {
+            throw new Exception("Transação não encontrada.");
+        }
+        
+        Conta conta = contaDao.buscarPorId(transacao.getContaId());
+        if (conta == null || !conta.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para acessar esta transação.");
+        }
+        
+        return transacao;
     }
 
-    public List<Transacao> listarTransacoes() throws SQLException, IOException {
+    public List<Transacao> listarTransacoes(Integer userId) throws SQLException, IOException, Exception {
         Connection conn = BancoDados.conectar();
+        ContaDAO contaDao = new ContaDAO(conn);
         TransacaoDAO dao = new TransacaoDAO(conn);
-        return dao.buscarTodos();
+        
+        List<Conta> contas = contaDao.buscarPorUserId(userId);
+        
+        List<Transacao> todasTransacoes = dao.buscarTodos();
+        return todasTransacoes.stream()
+                .filter(t -> contas.stream().anyMatch(c -> c.getId().equals(t.getContaId())))
+                .collect(Collectors.toList());
     }
 
-    public List<Transacao> listarPorConta(int contaId) throws SQLException, IOException {
+    public List<Transacao> listarPorConta(int contaId, Integer userId) throws SQLException, IOException, Exception {
         Connection conn = BancoDados.conectar();
+        ContaDAO contaDao = new ContaDAO(conn);
         TransacaoDAO dao = new TransacaoDAO(conn);
+        
+        Conta conta = contaDao.buscarPorId(contaId);
+        if (conta == null) {
+            throw new Exception("Conta não encontrada.");
+        }
+        if (!conta.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para acessar esta conta.");
+        }
+        
         return dao.buscarPorConta(contaId);
     }
 

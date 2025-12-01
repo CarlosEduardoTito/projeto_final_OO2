@@ -108,6 +108,18 @@ public class ContaDAO implements DAO<Conta, Integer> {
         return null;
     }
 
+    public Conta buscarPorNumeroEUserId(Integer numeroConta, Integer userId) throws SQLException {
+        String sql = "SELECT * FROM conta WHERE numeroConta=? AND userId=?";
+        try (PreparedStatement st = conn.prepareStatement(sql)) {
+            st.setInt(1, numeroConta);
+            st.setInt(2, userId);
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) return mapear(rs);
+            }
+        }
+        return null;
+    }
+
     @Override
     public List<Conta> buscarTodos() throws SQLException {
         String sql = """
@@ -122,6 +134,27 @@ public class ContaDAO implements DAO<Conta, Integer> {
 
             while (rs.next()) {
                 lista.add(mapear(rs));
+            }
+        }
+
+        return lista;
+    }
+
+    public List<Conta> buscarPorUserId(Integer userId) throws SQLException {
+        String sql = """
+            SELECT * FROM conta
+            WHERE userId = ?
+            ORDER BY nomeBanco, agencia, numeroConta
+        """;
+
+        List<Conta> lista = new ArrayList<>();
+
+        try (PreparedStatement st = conn.prepareStatement(sql)) {
+            st.setInt(1, userId);
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapear(rs));
+                }
             }
         }
 

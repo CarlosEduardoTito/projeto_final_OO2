@@ -35,7 +35,7 @@ public class TelaInicialFinanceiro extends JFrame {
     }
 
     public void abrirJanelaConta() {
-        JanelaConta janelaConta = new JanelaConta(this, true);
+        JanelaConta janelaConta = new JanelaConta(this, true, this.usuario);
         janelaConta.setVisible(true);
     }
 
@@ -45,7 +45,7 @@ public class TelaInicialFinanceiro extends JFrame {
     }
 
     public void abriJanelaTransacao() {
-        JanelaTransacao janelaTransacao = new JanelaTransacao(this, true);
+        JanelaTransacao janelaTransacao = new JanelaTransacao(this, true, this.usuario);
         janelaTransacao.setVisible(true);
     }
 

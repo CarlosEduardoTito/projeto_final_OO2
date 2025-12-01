@@ -1,6 +1,7 @@
 package br.edu.utfpr.oo2.FinanSystem.gui;
 
 import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
+import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
 import br.edu.utfpr.oo2.FinanSystem.service.TransacaoService;
 
 import javax.swing.*;
@@ -12,11 +13,13 @@ import java.util.List;
 public class JanelaTransacao extends JDialog {
 
     private final TransacaoService service = new TransacaoService();
+    private final Usuario usuario;
     private JTable tabela;
     private DefaultTableModel modelo;
 
-    public JanelaTransacao(Frame owner, boolean modal) {
+    public JanelaTransacao(Frame owner, boolean modal, Usuario usuario) {
         super(owner, modal);
+        this.usuario = usuario;
         init();
         carregarTabela();
     }
@@ -60,7 +63,7 @@ public class JanelaTransacao extends JDialog {
         TarefaComCarregamento.executar(
                 (Frame) getOwner(),
                 () -> {
-                    List<Transacao> lista = service.listarTransacoes();
+                    List<Transacao> lista = service.listarTransacoes(usuario.getId());
                     SwingUtilities.invokeLater(() -> {
                         modelo.setRowCount(0);
                         for (Transacao t : lista) {
@@ -93,7 +96,7 @@ public class JanelaTransacao extends JDialog {
 
             TarefaComCarregamento.executar(
                     (Frame) getOwner(),
-                    () -> service.cadastrarTransacao(nova),
+                    () -> service.cadastrarTransacao(nova, usuario.getId()),
                     () -> {
                         JOptionPane.showMessageDialog(this, "Transação cadastrada com sucesso.");
                         carregarTabela();
@@ -112,7 +115,7 @@ public class JanelaTransacao extends JDialog {
 
             TarefaComCarregamento.executarComRetorno(
                     (Frame) getOwner(),
-                    () -> service.buscarPorId(id),
+                    () -> service.buscarPorId(id, usuario.getId()),
                     existente -> {
 
                         if (existente == null) {
@@ -132,7 +135,7 @@ public class JanelaTransacao extends JDialog {
 
                             TarefaComCarregamento.executar(
                                     (Frame) getOwner(),
-                                    () -> service.atualizarTransacao(nova),
+                                    () -> service.atualizarTransacao(nova, usuario.getId()),
                                     () -> {
                                         JOptionPane.showMessageDialog(this, "Transação atualizada com sucesso.");
                                         carregarTabela();
@@ -165,7 +168,7 @@ public class JanelaTransacao extends JDialog {
 
             TarefaComCarregamento.executar(
                     (Frame) getOwner(),
-                    () -> service.excluirTransacao(id),
+                    () -> service.excluirTransacao(id, usuario.getId()),
                     () -> {
                         JOptionPane.showMessageDialog(this, "Transação excluída com sucesso.");
                         carregarTabela();

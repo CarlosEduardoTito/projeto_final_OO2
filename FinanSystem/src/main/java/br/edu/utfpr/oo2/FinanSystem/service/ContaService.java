@@ -17,44 +17,74 @@ public class ContaService {
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
 
-        if (dao.buscarPorNumero(conta.getNumeroConta()) != null)
-            throw new Exception("Já existe uma conta com esse número.");
+        if (dao.buscarPorNumeroEUserId(conta.getNumeroConta(), conta.getUserId()) != null)
+            throw new Exception("Você já possui uma conta com esse número.");
 
         int linhas = dao.cadastrar(conta);
         if (linhas == 0)
             throw new Exception("Erro ao cadastrar conta.");
     }
 
-    public void atualizarConta(Conta conta) throws Exception {
+    public void atualizarConta(Conta conta, Integer userId) throws Exception {
         validar(conta);
 
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
+
+        Conta contaExistente = dao.buscarPorId(conta.getId());
+        if (contaExistente == null) {
+            throw new Exception("Conta não encontrada.");
+        }
+        
+        if (!contaExistente.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para atualizar esta conta.");
+        }
+        
+        conta.setUserId(userId);
 
         int linhas = dao.atualizar(conta);
         if (linhas == 0)
             throw new Exception("Nenhuma conta foi atualizada.");
     }
 
-    public void excluirConta(Integer id) throws Exception {
+    public void excluirConta(Integer id, Integer userId) throws Exception {
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
+
+        Conta conta = dao.buscarPorId(id);
+        if (conta == null) {
+            throw new Exception("Conta não encontrada.");
+        }
+        
+        if (!conta.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para excluir esta conta.");
+        }
 
         int linhas = dao.excluir(id);
         if (linhas == 0)
             throw new Exception("A conta não existe.");
     }
 
-    public Conta buscarPorId(Integer id) throws SQLException, IOException {
+    public Conta buscarPorId(Integer id, Integer userId) throws SQLException, IOException, Exception {
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
-        return dao.buscarPorId(id);
+        Conta conta = dao.buscarPorId(id);
+        
+        if (conta == null) {
+            throw new Exception("Conta não encontrada.");
+        }
+        
+        if (!conta.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para acessar esta conta.");
+        }
+        
+        return conta;
     }
 
-    public List<Conta> listarContas() throws SQLException, IOException {
+    public List<Conta> listarContas(Integer userId) throws SQLException, IOException {
         Connection conn = BancoDados.conectar();
         ContaDAO dao = new ContaDAO(conn);
-        return dao.buscarTodos();
+        return dao.buscarPorUserId(userId);
     }
 
     private void validar(Conta c) throws Exception {
@@ -73,7 +103,7 @@ public class ContaService {
     }
 
 
-    public void transferir(int idOrigem, int idDestino, double valor) throws Exception {
+    public void transferir(int idOrigem, int idDestino, double valor, Integer userId) throws Exception {
 
         if (idOrigem == idDestino)
             throw new Exception("A conta de origem e destino não podem ser iguais.");
@@ -92,6 +122,10 @@ public class ContaService {
 
         if (destino == null)
             throw new Exception("Conta de destino não encontrada.");
+
+        if (!origem.getUserId().equals(userId)) {
+            throw new Exception("Você não tem permissão para transferir desta conta.");
+        }
 
         if (origem.getSaldoInicial() < valor)
             throw new Exception("Saldo insuficiente na conta de origem.");
