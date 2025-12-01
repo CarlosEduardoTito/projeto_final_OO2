@@ -22,6 +22,7 @@ import com.itextpdf.layout.properties.UnitValue;
 import br.edu.utfpr.oo2.FinanSystem.entities.Categoria;
 import br.edu.utfpr.oo2.FinanSystem.entities.Conta;
 import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
+import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
 
 public class RelatorioService {
 
@@ -35,7 +36,7 @@ public class RelatorioService {
         return transacaoService.listarPorPeriodo(inicio, fim);
     }
 
-    public void exportarPdf(List<Transacao> transacoes, String caminhoArquivo) throws Exception {
+    public void exportarPdf(List<Transacao> transacoes, String caminhoArquivo, Usuario usuario) throws Exception {
         Map<Integer, Categoria> mapaCategorias = carregarMapaCategoriasObjetos();
         Map<Integer, String> mapaContas = carregarMapaContas();
 
@@ -45,7 +46,8 @@ public class RelatorioService {
 
         document.add(new Paragraph("Relatório Financeiro Mensal").setBold().setFontSize(18));
         document.add(new Paragraph("Gerado em: " + LocalDate.now()));
-
+        document.add(new Paragraph("Usuario: " + usuario.getNomeCompleto()));
+        
         Table table = new Table(UnitValue.createPercentArray(new float[]{15, 20, 20, 25, 20}));
         table.setWidth(UnitValue.createPercentValue(100));
 
@@ -83,7 +85,7 @@ public class RelatorioService {
         document.close();
     }
 
-    public void exportarExcel(List<Transacao> transacoes, String caminhoArquivo) throws Exception {
+    public void exportarExcel(List<Transacao> transacoes, String caminhoArquivo, Usuario usuario) throws Exception {
 
         Map<Integer, Categoria> mapaCategorias = carregarMapaCategoriasObjetos();
         Map<Integer, String> mapaContas = carregarMapaContas();
@@ -91,15 +93,29 @@ public class RelatorioService {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Relatório");
 
-            Row headerRow = sheet.createRow(0);
+            Row userRow = sheet.createRow(0);
+            Cell userCell = userRow.createCell(0);
+            userCell.setCellValue("Usuário: " + usuario.getNomeCompleto());
+            
+            CellStyle boldStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            boldStyle.setFont(font);
+            userCell.setCellStyle(boldStyle);
+            
+            Row headerRow = sheet.createRow(2);
+            
             String[] colunas = {"ID", "Data", "Conta", "Categoria", "Descrição", "Valor", "Tipo"};
 
             for (int i = 0; i < colunas.length; i++) {
-                Cell cell = headerRow.createCell(i);
+                
+            	Cell cell = headerRow.createCell(i);
                 cell.setCellValue(colunas[i]);
+                cell.setCellStyle(boldStyle);
+                
             }
 
-            int rowNum = 1;
+            int rowNum = 3;
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
             for (Transacao t : transacoes) {

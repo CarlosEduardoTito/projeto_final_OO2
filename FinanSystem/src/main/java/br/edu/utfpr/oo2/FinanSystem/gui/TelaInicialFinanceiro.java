@@ -100,7 +100,7 @@ public class TelaInicialFinanceiro extends JFrame {
         
         JButton btnRelatorios = new JButton("Relatórios");
         btnRelatorios.addActionListener(e -> {
-            JanelaRelatorios janela = new JanelaRelatorios(this);
+            JanelaRelatorios janela = new JanelaRelatorios(this, this.usuario);
             janela.setVisible(true);
         });
         btnRelatorios.setFont(new Font("Tahoma", Font.PLAIN, 15));

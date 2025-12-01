@@ -1,6 +1,7 @@
 package br.edu.utfpr.oo2.FinanSystem.gui;
 
 import br.edu.utfpr.oo2.FinanSystem.entities.Transacao;
+import br.edu.utfpr.oo2.FinanSystem.entities.Usuario;
 import br.edu.utfpr.oo2.FinanSystem.service.RelatorioService;
 
 import javax.swing.*;
@@ -23,12 +24,14 @@ public class JanelaRelatorios extends JDialog {
     private ButtonGroup grupoTipo;
 
     private final RelatorioService service = new RelatorioService();
+    private final Usuario usuarioLogado;
     
     private List<Transacao> transacoesAtuais;
     private Map<String, Double> dadosAnuaisAtuais;
 
-    public JanelaRelatorios(Frame owner) {
+    public JanelaRelatorios(Frame owner, Usuario usuario) {
         super(owner, "Relatórios e Exportação", true);
+        this.usuarioLogado = usuario;
         
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -219,7 +222,7 @@ public class JanelaRelatorios extends JDialog {
 
                         if (formato.equals("PDF")) {
                             if (rbMensal.isSelected()) {
-                                service.exportarPdf(transacoesAtuais, arquivo.getAbsolutePath());
+                                service.exportarPdf(transacoesAtuais, arquivo.getAbsolutePath(), this.usuarioLogado);
                             } else {
                                 service.exportarPdfAnual(dadosAnuaisAtuais, ano, arquivo.getAbsolutePath());
                             }
@@ -227,7 +230,7 @@ public class JanelaRelatorios extends JDialog {
 
                         else {
                             if (rbMensal.isSelected()) {
-                                service.exportarExcel(transacoesAtuais, arquivo.getAbsolutePath());
+                                service.exportarExcel(transacoesAtuais, arquivo.getAbsolutePath(), this.usuarioLogado);
                             } else {
 
                                 service.exportarExcelAnual(dadosAnuaisAtuais, ano, arquivo.getAbsolutePath());
