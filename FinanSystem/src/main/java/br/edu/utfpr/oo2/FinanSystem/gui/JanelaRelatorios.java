@@ -37,7 +37,6 @@ public class JanelaRelatorios extends JDialog {
                     break;
                 }
             }
-            
             javax.swing.SwingUtilities.updateComponentTreeUI(this);
         } catch (Exception e) {
             e.printStackTrace();
